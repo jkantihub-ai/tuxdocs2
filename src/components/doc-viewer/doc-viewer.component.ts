@@ -72,7 +72,7 @@ import { DocChatAssistantComponent } from '../doc-chat-assistant/doc-chat-assist
           
           <div class="animate-in fade-in slide-in-from-bottom-4 duration-500">
             
-            <!-- Walkthrough Overlay (Dark Mode Only usually, but let's fit it) -->
+            <!-- Walkthrough Overlay -->
             @if (mode() === 'walkthrough') {
                <div class="fixed inset-0 z-50 bg-slate-50 dark:bg-[#020617] flex flex-col animate-in slide-in-from-bottom-10 duration-300">
                   <div class="flex items-center justify-between px-8 py-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a]">
@@ -304,13 +304,42 @@ import { DocChatAssistantComponent } from '../doc-chat-assistant/doc-chat-assist
               
               <!-- Original Content -->
               @if (isSplitView() || viewMode() === 'original') {
-                <div [class.flex-1]="isSplitView()" [class.min-w-0]="isSplitView()" class="animate-in fade-in duration-300">
-                   @if (isSplitView()) {
-                     <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">Legacy Documentation</div>
+                <div [class.flex-1]="isSplitView()" [class.min-w-0]="isSplitView()" class="animate-in fade-in duration-300 relative group">
+                   
+                   <!-- Toolbar for Original Content (Always visible now to ensure option is kept) -->
+                   <div class="flex justify-between items-center mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                        {{ isSplitView() ? 'Legacy Documentation' : 'Original Guide' }}
+                      </div>
+                      <button (click)="showRaw.set(!showRaw())" 
+                              class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded border transition-colors flex items-center gap-1"
+                              [class.bg-slate-100]="!showRaw()"
+                              [class.text-slate-500]="!showRaw()"
+                              [class.border-slate-200]="!showRaw()"
+                              [class.bg-orange-100]="showRaw()"
+                              [class.text-orange-600]="showRaw()"
+                              [class.border-orange-200]="showRaw()"
+                              [class.dark:bg-slate-800]="!showRaw()"
+                              [class.dark:text-slate-400]="!showRaw()"
+                              [class.dark:border-slate-700]="!showRaw()"
+                              [class.dark:bg-orange-900/30]="showRaw()"
+                              [class.dark:text-orange-400]="showRaw()"
+                              [class.dark:border-orange-800]="showRaw()">
+                         <svg *ngIf="!showRaw()" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                         <svg *ngIf="showRaw()" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                         {{ showRaw() ? 'Rendered' : 'Source' }}
+                      </button>
+                   </div>
+
+                   @if (showRaw()) {
+                      <div class="bg-slate-50 dark:bg-[#0c0c0c] border border-slate-200 dark:border-slate-800 rounded-lg p-4 overflow-x-auto">
+                        <pre class="text-xs font-mono text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{{ doc()?.content }}</pre>
+                      </div>
+                   } @else {
+                      <article class="markdown-body min-h-[50vh] pb-20">
+                          <div class="font-sans leading-relaxed" [innerHTML]="safeOriginalContent()"></div>
+                      </article>
                    }
-                   <article class="markdown-body min-h-[50vh] pb-20">
-                      <div class="font-sans leading-relaxed" [innerHTML]="safeOriginalContent()"></div>
-                   </article>
                 </div>
               }
 
@@ -324,7 +353,9 @@ import { DocChatAssistantComponent } from '../doc-chat-assistant/doc-chat-assist
                  @if (modernContent()) {
                     <div [class.flex-1]="isSplitView()" [class.min-w-0]="isSplitView()" class="animate-in fade-in duration-300">
                        @if (isSplitView()) {
-                         <div class="text-xs font-bold text-green-600 dark:text-green-500 uppercase tracking-widest mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">Modernized by AI</div>
+                         <div class="flex justify-between items-center mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
+                            <div class="text-xs font-bold text-green-600 dark:text-green-500 uppercase tracking-widest">Modernized by AI</div>
+                         </div>
                        }
                        <article class="markdown-body min-h-[50vh] pb-20">
                           <div class="font-sans leading-relaxed" [innerHTML]="safeModernContent()"></div>
@@ -392,6 +423,7 @@ export class DocViewerComponent {
   modernContent = signal<string | null>(null);
   viewMode = signal<'original' | 'modern'>('original');
   isSplitView = signal(false);
+  showRaw = signal(false);
 
   summary = signal<string>('');
   isSummarizing = signal(false);
@@ -465,6 +497,7 @@ export class DocViewerComponent {
           this.modernContent.set(null);
           this.viewMode.set('original');
           this.isSplitView.set(false);
+          this.showRaw.set(false);
           this.summary.set('');
           this.walkthroughSteps.set([]);
           this.mode.set('read');
