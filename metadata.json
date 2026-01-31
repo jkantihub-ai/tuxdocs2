@@ -1,0 +1,5 @@
+{
+  "name": "Modern TLDP",
+  "description": "A reimagined, AI-first interface for The Linux Documentation Project using Google Gemini.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern TLDP</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#f97316">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="https://picsum.photos/192/192">
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTW9kZXJuIFRMRFAiLCJzaG9ydF9uYW1lIjoiVExEUCIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMDIwNjE3IiwidGhlbWVfY29sb3IiOiIjZjk3MzE2IiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vcGljc3VtLnBob3Rvcy8xOTIvMTkyIiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL3BuZyJ9XX0=">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              950: '#020617',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .dark ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #f97316; /* Orange hover */
+    }
+
+    /* Base Theme Variables */
+    body {
+      background-color: #f8fafc; /* Slate 50 */
+      color: #0f172a; /* Slate 900 */
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .dark body {
+      background-color: #020617; /* Slate 950 */
+      color: #e2e8f0; /* Slate 200 */
+    }
+
+    /* Markdown Styles - Light (Default) */
+    .markdown-body h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 1.5rem; color: #ea580c; /* Orange 600 */ }
+    .markdown-body h2 { font-size: 1.5rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; color: #1e293b; /* Slate 800 */ }
+    .markdown-body h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #f97316; /* Orange 500 */ }
+    .markdown-body p { margin-bottom: 1.25rem; line-height: 1.75; color: #334155; /* Slate 700 */ }
+    .markdown-body pre { background: #1e293b; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
+    .markdown-body code { font-family: monospace; color: #ea580c; background: #fff7ed; padding: 2px 4px; border-radius: 4px; }
+    .markdown-body pre code { background: transparent; color: #fb923c; padding: 0; }
+    .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; color: #334155; }
+    .markdown-body li { margin-bottom: 0.5rem; }
+
+    /* Markdown Styles - Dark */
+    .dark .markdown-body h1 { color: #fff7ed; }
+    .dark .markdown-body h2 { color: #fed7aa; }
+    .dark .markdown-body h3 { color: #fdba74; }
+    .dark .markdown-body p { color: #cbd5e1; }
+    .dark .markdown-body pre { border-color: #334155; }
+    .dark .markdown-body code { color: #fb923c; background: #334155; }
+    .dark .markdown-body pre code { background: transparent; color: #fb923c; }
+    .dark .markdown-body ul { color: #cbd5e1; }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(249, 115, 22, 0.2);
+    }
+    .dark .glass-panel {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(251, 146, 60, 0.1);
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "rxjs": "https://esm.sh/rxjs@^7.8.2?conditions=es2015",
+    "rxjs/operators": "https://esm.sh/rxjs@^7.8.2/operators?conditions=es2015",
+    "rxjs/ajax": "https://esm.sh/rxjs@^7.8.2/ajax?conditions=es2015",
+    "rxjs/webSocket": "https://esm.sh/rxjs@^7.8.2/webSocket?conditions=es2015",
+    "rxjs/testing": "https://esm.sh/rxjs@^7.8.2/testing?conditions=es2015",
+    "rxjs/fetch": "https://esm.sh/rxjs@^7.8.2/fetch?conditions=es2015",
+    "@google/genai": "https://esm.sh/@google/genai@^1.39.0?external=rxjs",
+    "@angular/platform-browser": "https://esm.sh/@angular/platform-browser@^21.1.2?external=rxjs",
+    "@angular/core": "https://esm.sh/@angular/core@^21.1.2?external=rxjs",
+    "@angular/compiler": "https://esm.sh/@angular/compiler@^21.1.2?external=rxjs",
+    "@angular/common": "https://esm.sh/@angular/common@^21.1.2?external=rxjs",
+    "@angular/router": "https://esm.sh/@angular/router@^21.1.2?external=rxjs",
+    "marked": "https://esm.sh/marked@15.0.0",
+    "@angular/forms": "https://esm.sh/@angular/forms@^21.1.2?external=rxjs"
+  }
+}
+</script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
