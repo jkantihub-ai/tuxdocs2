@@ -156,15 +156,22 @@ export class GeminiService {
    */
   async modernizeDoc(docContent: string): Promise<string> {
     const prompt = `
-      You are a Senior Technical Writer at a major Linux Enterprise.
-      Your task is to REWRITE this document using MODERN STANDARDS (iproute2, nftables, systemd).
+      You are a Senior Technical Writer redesigning legacy Linux docs for a modern audience.
       
-      CRITICAL: You must ENHANCE the structure to be a perfect "How-To":
-      1. **Modernization Note**: A brief blockquote explaining what changed.
-      2. **Prerequisites**: What is needed before starting?
-      3. **Step-by-Step Implementation**: Clear, numbered steps with code blocks.
-      4. **Verification**: Explicit commands to prove it works.
-      5. **Troubleshooting** (Optional): Common pitfalls.
+      Your goal is to clearly separate the CONCEPT ("The Why") from the EXECUTION ("The How").
+
+      Strict Structure:
+      
+      ## 1. The Why (Concept & Philosophy)
+      - **Essence**: Retain the *essence* of the original introduction. Why does this guide exist?
+      - **The Shift**: Explain why we are using modern tools (e.g., ip vs ifconfig) in this context. 
+      - **Tone**: Keep the tone educational and philosophical, honoring the original author's intent while bridging to the future.
+
+      ## 2. The How (Modern Implementation)
+      - **Prerequisites**: What is needed?
+      - **Action Plan**: Numbered, clear steps using MODERN standards (systemd, nftables, iproute2).
+      - **Verification**: Commands to verify success.
+      - **Troubleshooting**: One or two common pitfalls.
 
       Output strict Markdown.
 
@@ -216,13 +223,6 @@ export class GeminiService {
       let text = response.text || '';
       let newCwd = undefined;
 
-      // Check for CWD change in JSON block (naive parsing if AI appends it)
-      // A more robust way is to ask for JSON output, but we want raw text for the terminal look, 
-      // so we'll look for a specific marker or infer it.
-      // Let's refine the prompt strategy for CWD in a simple applet:
-      // We will actually just handle CD client side for basic stuff, OR trust the AI to not be stateful 
-      // but let's try to extract JSON if present.
-      
       const jsonMatch = text.match(/\{"cwd":\s*"(.*?)"\}/);
       if (jsonMatch) {
         newCwd = jsonMatch[1];

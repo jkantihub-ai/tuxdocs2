@@ -24,7 +24,7 @@ import { DocChatAssistantComponent } from '../doc-chat-assistant/doc-chat-assist
         [modernContent]="modernContent()">
     </app-doc-chat-assistant>
 
-    <div class="min-h-screen pb-20 bg-slate-50 dark:bg-[#020617] transition-colors duration-300">
+    <div class="min-h-screen flex flex-col bg-slate-50 dark:bg-[#020617] transition-colors duration-300">
       <!-- Navbar / Top Bar -->
       <nav class="sticky top-0 z-30 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#020617]/80 backdrop-blur-md px-6 py-4 flex justify-between items-center transition-colors duration-300">
         <div class="flex items-center space-x-3 cursor-pointer group" (click)="goHome()">
@@ -67,7 +67,7 @@ import { DocChatAssistantComponent } from '../doc-chat-assistant/doc-chat-assist
       </nav>
 
       <!-- Main Content -->
-      <main class="max-w-7xl mx-auto px-6 py-10">
+      <main class="max-w-7xl mx-auto px-6 py-10 w-full flex-1">
         @if (doc(); as currentDoc) {
           
           <div class="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -204,6 +204,24 @@ import { DocChatAssistantComponent } from '../doc-chat-assistant/doc-chat-assist
                         </button>
                     </div>
 
+                    <!-- Explicit Source URL Link (New) -->
+                    @if (currentDoc.sourceUrl) {
+                       <div class="mb-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-lg p-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 animate-in fade-in">
+                          <div class="flex items-start gap-3 overflow-hidden">
+                             <div class="mt-0.5 p-1.5 bg-blue-100 dark:bg-blue-800 rounded text-blue-600 dark:text-blue-300 flex-shrink-0">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                             </div>
+                             <div class="min-w-0">
+                                <h4 class="text-xs font-bold text-blue-900 dark:text-blue-200 uppercase tracking-wide">Original Source</h4>
+                                <a [href]="currentDoc.sourceUrl" target="_blank" class="text-xs text-blue-700 dark:text-blue-400 font-mono hover:underline block truncate break-all">{{ currentDoc.sourceUrl }}</a>
+                             </div>
+                          </div>
+                          <a [href]="currentDoc.sourceUrl" target="_blank" class="flex-shrink-0 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded shadow-sm whitespace-nowrap transition-colors">
+                             {{ currentDoc.sourceUrl.includes('tldp.org') ? 'Visit TLDP.org' : 'Visit Source' }}
+                          </a>
+                       </div>
+                    }
+
                     <!-- Obsolescence Check & Modernize Action -->
                     @if (currentDoc.obsolescenceScore > 80) {
                         <app-obsolescence-warning 
@@ -258,7 +276,7 @@ import { DocChatAssistantComponent } from '../doc-chat-assistant/doc-chat-assist
                       [class.dark:text-white]="viewMode() === 'original' && !isSplitView()"
                       [class.border-slate-900]="viewMode() === 'original' && !isSplitView()"
                       [class.dark:border-white]="viewMode() === 'original' && !isSplitView()">
-                      Legacy Original
+                      Original (TLDP)
                   </button>
                   <button (click)="viewMode.set('modern'); isSplitView.set(false)" class="pb-3 text-sm font-bold tracking-wide transition-all border-b-2 flex items-center gap-2" 
                       [class.text-slate-400]="viewMode() !== 'modern' && !isSplitView()" 
@@ -309,7 +327,7 @@ import { DocChatAssistantComponent } from '../doc-chat-assistant/doc-chat-assist
                    <!-- Toolbar for Original Content (Always visible now to ensure option is kept) -->
                    <div class="flex justify-between items-center mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">
                       <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                        {{ isSplitView() ? 'Legacy Documentation' : 'Original Guide' }}
+                        {{ isSplitView() ? 'Original (TLDP)' : 'Original Guide' }}
                       </div>
                       <button (click)="showRaw.set(!showRaw())" 
                               class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded border transition-colors flex items-center gap-1"
@@ -415,6 +433,38 @@ import { DocChatAssistantComponent } from '../doc-chat-assistant/doc-chat-assist
            </div>
         }
       </main>
+
+      <footer class="border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-[#0f172a]/50 backdrop-blur-sm py-10 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left Side: Licenses -->
+            <div>
+                <h5 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>
+                    License & Compliance
+                </h5>
+                <div class="space-y-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                    <p>
+                        <strong>Original Content:</strong> Sourced from <a href="https://tldp.org" target="_blank" class="text-orange-600 hover:underline font-medium">The Linux Documentation Project</a>. All original documents retain their respective licenses (GFDL, OPL, or GPL) as defined by their authors.
+                    </p>
+                    <p>
+                        <strong>AI Modifications:</strong> All AI-generated modernizations, summaries, and interactive labs on "Modern TLDP" are licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank" class="text-orange-600 hover:underline font-medium">Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)</a>.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Right Side: Links -->
+            <div class="flex flex-col md:items-end justify-start space-y-3">
+                <h5 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-1">TLDP Resources</h5>
+                <a href="https://tldp.org/manifesto.html" target="_blank" class="text-sm text-slate-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">The Manifesto</a>
+                <a href="https://tldp.org/license.html" target="_blank" class="text-sm text-slate-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">License Information</a>
+                <a href="https://tldp.org/authors.html" target="_blank" class="text-sm text-slate-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">Author Guidelines</a>
+                
+                <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 w-full md:w-auto md:text-right">
+                    <p class="text-xs text-slate-400">"Modern TLDP" is an AI-powered interface and is not directly affiliated with the original LDP administration.</p>
+                </div>
+            </div>
+        </div>
+      </footer>
     </div>
   `
 })

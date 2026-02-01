@@ -10,6 +10,7 @@ export interface Doc {
   modernEquivalent?: string;
   content: string;
   description: string;
+  sourceUrl?: string; // Link to the actual source (TLDP, Nginx.org, etc)
 }
 
 @Injectable({
@@ -17,357 +18,286 @@ export interface Doc {
 })
 export class DocService {
   // Mock Database of Linux Docs
+  // Note: All content is intentionally "Legacy" to demonstrate the AI Modernization features.
   private docs: Doc[] = [
     {
-      id: 'ssh-hardening',
-      title: 'Securing SSH Service',
+      id: 'security-howto',
+      title: 'Security HOWTO',
       category: 'Security',
-      lastUpdated: '2023-11-10',
-      obsolescenceScore: 5,
-      description: 'The definitive guide to hardening OpenSSH server for production environments.',
+      lastUpdated: '2004-06-25',
+      obsolescenceScore: 95,
+      modernEquivalent: 'OpenSSH / Fail2Ban / UFW',
+      description: 'A general overview of security issues that face the administrator of Linux systems.',
+      sourceUrl: 'https://tldp.org/HOWTO/html_single/Security-HOWTO/',
       content: `
-# Securing SSH Service
+# Security HOWTO
 
-## Introduction
-Secure Shell (SSH) is the primary entry point for managing Linux servers. However, a default SSH configuration is often too permissive for production environments exposed to the internet. This guide covers the essential steps to harden your SSH daemon against brute-force attacks and unauthorized access.
+## 5.6. Secure Shell (SSH)
+SSH is a protocol for logging into and executing commands on a remote machine. It provides secure encrypted communications between two untrusted hosts over an insecure network.
 
-## 1. User Management & Permissions
-**Never log in as root.** The root account is the primary target for attackers because the username is known.
-Create a dedicated sudo user instead:
+### Configuration
+You should disable root logins in \`/etc/ssh/sshd_config\`:
 
-\`\`\`bash
-adduser adminuser
-usermod -aG sudo adminuser
-\`\`\`
-
-## 2. Key-Based Authentication
-Passwords can be guessed or brute-forced. SSH keys provide cryptographic proof of identity.
-
-**Generate a key pair on your local machine:**
-\`\`\`bash
-ssh-keygen -t ed25519 -C "admin@example.com"
-\`\`\`
-
-**Copy the public key to the server:**
-\`\`\`bash
-ssh-copy-id adminuser@server_ip
-\`\`\`
-
-## 3. Hardening sshd_config
-Edit the main configuration file \`/etc/ssh/sshd_config\`.
-
-### Disable Root Login
-Prevent direct root access.
 \`\`\`bash
 PermitRootLogin no
 \`\`\`
 
-### Disable Password Authentication
-Force the use of SSH keys.
-\`\`\`bash
-PasswordAuthentication no
-ChallengeResponseAuthentication no
-\`\`\`
+And ensure you are using Protocol 2, not Protocol 1 which is insecure.
 
-### Restrict Auth Tries
-Limit the number of authentication attempts per connection to slow down brute-force tools.
-\`\`\`bash
-MaxAuthTries 3
-\`\`\`
+### Tcp Wrappers
+SSH supports TCP wrappers. You should edit \`/etc/hosts.allow\` and \`/etc/hosts.deny\` to restrict access to your sshd service.
 
-### Change Default Port (Optional)
-Moving SSH off port 22 reduces log noise from automated scanners (security through obscurity, but useful for log hygiene).
-\`\`\`bash
-Port 2222
-\`\`\`
-
-## 4. Applying Changes
-Always validate the configuration before restarting to avoid locking yourself out.
-
-\`\`\`bash
-sshd -t
-systemctl restart sshd
-\`\`\`
-
-## 5. Firewall Configuration (UFW)
-Ensure your firewall allows traffic on the new port.
-
-\`\`\`bash
-ufw allow 2222/tcp
-ufw enable
-\`\`\`
-      `
-    },
-    {
-      id: 'docker-basics',
-      title: 'Docker Container Basics',
-      category: 'DevOps',
-      lastUpdated: '2024-01-15',
-      obsolescenceScore: 0,
-      description: 'Introduction to running applications in containers.',
-      content: `
-# Docker Container Basics
-
-## Running a Container
-To run an Nginx server in the background:
-\`\`\`bash
-docker run -d -p 80:80 --name my-nginx nginx:alpine
-\`\`\`
-
-## Listing Containers
-View running containers:
-\`\`\`bash
-docker ps
-\`\`\`
-View all containers (including stopped):
-\`\`\`bash
-docker ps -a
-\`\`\`
-
-## Viewing Logs
-To see what's happening inside the container:
-\`\`\`bash
-docker logs -f my-nginx
-\`\`\`
-      `
-    },
-    {
-      id: 'nginx-reverse-proxy',
-      title: 'Nginx as a Reverse Proxy',
-      category: 'Web Servers',
-      lastUpdated: '2023-09-05',
-      obsolescenceScore: 5,
-      description: 'Configuring Nginx to forward traffic to backend applications.',
-      content: `
-# Nginx as a Reverse Proxy
-
-## Basic Configuration
-Create a new config file in \`/etc/nginx/sites-available/myapp\`:
-
-\`\`\`nginx
-server {
-    listen 80;
-    server_name example.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-\`\`\`
-
-## Enabling the Site
-Link the configuration to sites-enabled:
-\`\`\`bash
-ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
-nginx -t
-systemctl reload nginx
-\`\`\`
-      `
-    },
-    {
-      id: 'lvm-guide',
-      title: 'Logical Volume Manager (LVM) Guide',
-      category: 'Storage',
-      lastUpdated: '2022-05-20',
-      obsolescenceScore: 15,
-      description: 'Managing disk storage flexibly with LVM.',
-      content: `
-# Logical Volume Manager (LVM)
-
-## Concepts
-- **PV**: Physical Volume (the raw disk)
-- **VG**: Volume Group (pool of storage)
-- **LV**: Logical Volume (partition you mount)
-
-## creating LVM
-1. Initialize physical volume:
-\`\`\`bash
-pvcreate /dev/sdb
-\`\`\`
-
-2. Create Volume Group:
-\`\`\`bash
-vgcreate my_vg /dev/sdb
-\`\`\`
-
-3. Create Logical Volume:
-\`\`\`bash
-lvcreate -L 10G -n my_data my_vg
-\`\`\`
-
-4. Format and Mount:
-\`\`\`bash
-mkfs.ext4 /dev/my_vg/my_data
-mount /dev/my_vg/my_data /mnt/data
-\`\`\`
-      `
-    },
-    {
-      id: 'cron-scheduling',
-      title: 'Scheduling Tasks with Cron',
-      category: 'Automation',
-      lastUpdated: '2020-03-12',
-      obsolescenceScore: 20,
-      modernEquivalent: 'systemd timers',
-      description: 'Automating scripts using the cron daemon.',
-      content: `
-# Scheduling Tasks with Cron
-
-## Editing Crontab
-To edit the current user's crontab:
-\`\`\`bash
-crontab -e
-\`\`\`
-
-## Syntax
 \`\`\`text
-* * * * * /path/to/command
-- - - - -
-| | | | |
-| | | | +----- Day of week (0 - 7) (Sunday=0 or 7)
-| | | +------- Month (1 - 12)
-| | +--------- Day of month (1 - 31)
-| +----------- Hour (0 - 23)
-+------------- Minute (0 - 59)
+# /etc/hosts.deny
+sshd: ALL
 \`\`\`
 
-## Example: Backup every night at 3 AM
-\`\`\`bash
-0 3 * * * /usr/local/bin/backup.sh
+\`\`\`text
+# /etc/hosts.allow
+sshd: 192.168.1.0/255.255.255.0
 \`\`\`
       `
     },
     {
-      id: 'grep-mastery',
-      title: 'Mastering Grep',
-      category: 'CommandLine',
-      lastUpdated: '2023-06-01',
-      obsolescenceScore: 5,
-      description: 'Searching text efficiently in Linux.',
-      content: `
-# Mastering Grep
-
-## Basic Search
-Search for a string in a file:
-\`\`\`bash
-grep "error" /var/log/syslog
-\`\`\`
-
-## Recursive Search
-Search in all files in a directory:
-\`\`\`bash
-grep -r "config" /etc/nginx/
-\`\`\`
-
-## Regular Expressions
-Search for lines starting with "User":
-\`\`\`bash
-grep "^User" /etc/ssh/sshd_config
-\`\`\`
-
-## Context
-Show 3 lines before and after the match:
-\`\`\`bash
-grep -C 3 "exception" app.log
-\`\`\`
-      `
-    },
-    {
-      id: 'iptables-firewall',
-      title: 'Configuring Firewalls with iptables',
-      category: 'Network Security',
-      lastUpdated: '2009-04-12',
+      id: 'apache-overview',
+      title: 'Apache Overview HOWTO',
+      category: 'Web Servers',
+      lastUpdated: '2002-10-14',
       obsolescenceScore: 90,
-      modernEquivalent: 'nftables',
-      description: 'A comprehensive guide to packet filtering using the netfilter iptables tools.',
+      modernEquivalent: 'Nginx / Caddy',
+      description: 'An overview of the Apache Web Server, the standard for serving web content.',
+      sourceUrl: 'https://tldp.org/HOWTO/html_single/Apache-Overview-HOWTO/',
       content: `
-# Configuring Firewalls with iptables
+# Apache Overview HOWTO
+
+## Starting Apache
+Apache is usually run as a standalone daemon. You can start it using the \`apachectl\` control script.
+
+\`\`\`bash
+/usr/local/apache/bin/apachectl start
+\`\`\`
+
+## Configuration
+The main configuration file is \`httpd.conf\`.
+
+### ServerRoot
+The top of the directory tree under which the server's configuration, error, and log files are kept.
+\`\`\`apache
+ServerRoot "/etc/httpd"
+\`\`\`
+
+### CGI Scripts
+To enable CGI scripts, ensure the following is uncommented:
+\`\`\`apache
+AddHandler cgi-script .cgi
+\`\`\`
+
+## Performance
+For high loads, you may need to adjust \`MaxClients\`. Be careful not to set this too high or you will run out of RAM.
+      `
+    },
+    {
+      id: 'cvs-rcs-howto',
+      title: 'CVS-RCS HOWTO',
+      category: 'DevOps',
+      lastUpdated: '2001-09-21',
+      obsolescenceScore: 99,
+      modernEquivalent: 'Git',
+      description: 'How to set up and use the Concurrent Versions System (CVS) and Revision Control System (RCS).',
+      sourceUrl: 'https://tldp.org/HOWTO/html_single/CVS-RCS-HOWTO/',
+      content: `
+# CVS-RCS HOWTO
 
 ## Introduction
-iptables is the userspace command line program used to configure the Linux 2.4.x and later packet filtering ruleset. It is targeted towards system administrators.
+CVS (Concurrent Versions System) is the dominant open-source version control system. It is built upon RCS.
+
+## Setting up a Repository
+First, create a user and group for the repository.
+
+\`\`\`bash
+mkdir /usr/local/cvsroot
+cvs -d /usr/local/cvsroot init
+\`\`\`
 
 ## Basic Usage
-To list the current rules, use the following command:
+To check out a module:
 \`\`\`bash
-iptables -L -v
+export CVSROOT=/usr/local/cvsroot
+cvs checkout myproject
 \`\`\`
 
-## Block an IP Address
-To block all incoming traffic from a specific IP (e.g., 192.168.1.100):
+## Committing Changes
+Once you have modified files:
 \`\`\`bash
-iptables -A INPUT -s 192.168.1.100 -j DROP
+cvs commit -m "Fixed the login bug"
 \`\`\`
 
-## Saving Rules
-On RedHat based systems, you can save the rules using:
-\`\`\`bash
-service iptables save
-\`\`\`
-
-## Conclusion
-iptables provides a robust framework for securing your Linux server. However, rule complexity can grow quickly.
+## Remote Access
+You can use the \`:pserver:\` method for remote access, though it sends passwords in cleartext.
       `
     },
     {
-      id: 'init-scripts',
-      title: 'Writing SysV Init Scripts',
-      category: 'System Administration',
-      lastUpdated: '2005-08-20',
-      obsolescenceScore: 95,
-      modernEquivalent: 'systemd',
-      description: 'How to create startup scripts in /etc/init.d for managing daemons.',
+      id: 'lvm-howto',
+      title: 'LVM HOWTO',
+      category: 'Storage',
+      lastUpdated: '2006-03-25',
+      obsolescenceScore: 85,
+      modernEquivalent: 'LVM2 (Standard)',
+      description: 'Learning how to compile, install, and use the Logical Volume Manager.',
+      sourceUrl: 'https://tldp.org/HOWTO/html_single/LVM-HOWTO/',
       content: `
-# Writing SysV Init Scripts
+# LVM HOWTO
 
-## Overview
-System V style init scripts are the traditional method for starting and stopping services on Linux. They live in \`/etc/init.d/\`.
+## What is LVM?
+LVM adds a layer of abstraction between your physical disks and your file system.
 
-## Structure of a Script
-A basic script needs to handle arguments like \`start\`, \`stop\`, and \`restart\`.
-
+## Creating Physical Volumes
+Initialize your disk partitions:
 \`\`\`bash
-#!/bin/bash
-# chkconfig: 2345 20 80
-# description: Description of the service
-
-case "$1" in
-    start)
-        echo "Starting my_service..."
-        /usr/bin/my_service &
-        ;;
-    stop)
-        echo "Stopping my_service..."
-        killall my_service
-        ;;
-    *)
-        echo "Usage: /etc/init.d/my_service {start|stop}"
-        exit 1
-        ;;
-esac
+pvcreate /dev/hda1 /dev/hdb1
 \`\`\`
 
-## Enabling the Service
-Use \`chkconfig\` to add the service to the runlevels:
+## Creating Volume Groups
+Combine them into a volume group:
 \`\`\`bash
-chkconfig --add my_service
-chkconfig my_service on
+vgcreate my_volume_group /dev/hda1 /dev/hdb1
+\`\`\`
+
+## Creating Logical Volumes
+Carve out a logical volume:
+\`\`\`bash
+lvcreate -L1500 -nmy_logical_volume my_volume_group
+\`\`\`
+
+## File Systems
+Create an ext3 file system on it:
+\`\`\`bash
+mke2fs -j /dev/my_volume_group/my_logical_volume
 \`\`\`
       `
     },
     {
-      id: 'modern-archiving',
-      title: 'Archiving with Tar',
+      id: 'bash-prog-intro',
+      title: 'Bash-Prog-Intro HOWTO',
+      category: 'Automation',
+      lastUpdated: '2000-07-26',
+      obsolescenceScore: 92,
+      modernEquivalent: 'Modern Bash / Python / Go',
+      description: 'An introduction to shell programming with Bash (Legacy constructs).',
+      sourceUrl: 'https://tldp.org/HOWTO/html_single/Bash-Prog-Intro-HOWTO/',
+      content: `
+# Bash-Prog-Intro HOWTO
+
+## Variables
+You can assign variables like this (no spaces around the = sign):
+
+\`\`\`bash
+STR="Hello World!"
+echo $STR
+\`\`\`
+
+## Loops
+A basic for loop to iterate over files:
+
+\`\`\`bash
+for i in $( ls ); do
+    echo item: $i
+done
+\`\`\`
+*Note: Using $(ls) is often considered bad practice today due to filenames with spaces.*
+
+## Conditionals
+\`\`\`bash
+if [ "$1" -gt "100" ]; then
+    echo "That's a big number."
+fi
+\`\`\`
+      `
+    },
+    {
+      id: 'firewall-howto',
+      title: 'Firewall HOWTO',
+      category: 'Network Security',
+      lastUpdated: '2004-03-08',
+      obsolescenceScore: 95,
+      modernEquivalent: 'nftables / ufw / firewalld',
+      description: 'A guide to setting up a firewall using iptables and netfilter.',
+      sourceUrl: 'https://tldp.org/HOWTO/html_single/Firewall-HOWTO/',
+      content: `
+# Firewall HOWTO
+
+## ipchains vs iptables
+This document focuses on **iptables**, the replacement for ipchains in Linux 2.4.
+
+## Basic Policy
+Set the default policy to DROP:
+\`\`\`bash
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+\`\`\`
+
+## Allowing SSH
+\`\`\`bash
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+\`\`\`
+
+## Masquerading (NAT)
+To share your internet connection:
+\`\`\`bash
+echo "1" > /proc/sys/net/ipv4/ip_forward
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+\`\`\`
+      `
+    },
+    {
+      id: 'nfs-howto',
+      title: 'NFS HOWTO',
+      category: 'Networking',
+      lastUpdated: '2002-08-25',
+      obsolescenceScore: 88,
+      modernEquivalent: 'NFSv4 / Samba',
+      description: 'Setting up Network File System (NFS) servers and clients.',
+      sourceUrl: 'https://tldp.org/HOWTO/html_single/NFS-HOWTO/',
+      content: `
+# NFS HOWTO
+
+## /etc/exports
+The server configuration file is \`/etc/exports\`.
+
+\`\`\`text
+/home 192.168.0.0/255.255.255.0(rw)
+/data machine1(ro)
+\`\`\`
+
+## Starting Services
+You need the portmapper running.
+\`\`\`bash
+/etc/rc.d/init.d/portmap start
+/etc/rc.d/init.d/nfs start
+\`\`\`
+
+## Mounting
+On the client:
+\`\`\`bash
+mount -t nfs server:/home /mnt/home
+\`\`\`
+      `
+    },
+    {
+      id: 'tar-backup',
+      title: 'Linux Backup Strategy (SAG)',
       category: 'File Management',
-      lastUpdated: '2023-01-15',
-      obsolescenceScore: 10,
-      description: 'Standard guide for tape archives in Linux.',
+      lastUpdated: '2007-03-10',
+      obsolescenceScore: 85,
+      modernEquivalent: 'Restic / Borg / Kopia',
+      description: 'From the System Administrators Guide: Archiving with Tar.',
+      sourceUrl: 'https://tldp.org/LDP/sag/html/backups.html',
       content: `
 # Archiving with Tar
 
 ## Introduction
-GNU tar saves many files together into a single tape or disk archive, and can restore individual files from the archive.
+GNU tar saves many files together into a single tape or disk archive.
 
 ## Creating an Archive
 To create a compressed archive of a directory:
@@ -381,104 +311,148 @@ To extract the archive:
 tar -xzvf archive.tar.gz
 \`\`\`
 
-This tool remains the standard for Linux file distribution.
+## Tape Drives
+To write to a SCSI tape drive:
+\`\`\`bash
+tar -cvf /dev/st0 /home
+\`\`\`
       `
     },
     {
-        id: 'ifconfig-guide',
-        title: 'Network Configuration with ifconfig',
+      id: 'net-howto',
+        title: 'Net-HOWTO',
         category: 'Networking',
-        lastUpdated: '2003-11-05',
+        lastUpdated: '2002-08-09',
         obsolescenceScore: 99,
         modernEquivalent: 'iproute2 (ip command)',
-        description: 'Legacy guide for configuring network interfaces using ifconfig.',
+        description: 'Detailed guide on configuring networking (Legacy).',
+        sourceUrl: 'https://tldp.org/HOWTO/html_single/Net-HOWTO/',
         content: `
-# Network Configuration with ifconfig
+# Net-HOWTO
 
-## Setting IP Address
-To set the IP address of eth0:
+## Configuring Interfaces
+The primary tool is \`ifconfig\`.
+
 \`\`\`bash
 ifconfig eth0 192.168.1.5 netmask 255.255.255.0 up
 \`\`\`
 
-## Viewing Interfaces
-Simply type:
+## Routing
+To add a default gateway:
 \`\`\`bash
-ifconfig -a
+route add default gw 192.168.1.1
 \`\`\`
 
-## Note
-This command is deprecated in many modern distributions.
+## /etc/resolv.conf
+Configure your DNS nameservers here:
+\`\`\`text
+nameserver 8.8.8.8
+\`\`\`
         `
     },
     {
-      id: 'systemd-unit-files',
-      title: 'Creating Systemd Services',
+      id: 'dns-howto',
+      title: 'DNS HOWTO',
       category: 'System Administration',
-      lastUpdated: '2023-04-10',
-      obsolescenceScore: 0,
-      description: 'How to write unit files to manage custom services with systemd.',
+      lastUpdated: '2001-11-23',
+      obsolescenceScore: 95,
+      modernEquivalent: 'Bind9 / CoreDNS',
+      description: 'How to become a master of your domain using BIND 4/8.',
+      sourceUrl: 'https://tldp.org/HOWTO/html_single/DNS-HOWTO/',
       content: `
-# Creating Systemd Services
+# DNS HOWTO
 
-## The Unit File
-Create a file at \`/etc/systemd/system/myapp.service\`:
+## Named.conf
+BIND is configured via \`/etc/named.conf\`.
 
-\`\`\`ini
-[Unit]
-Description=My Custom Application
-After=network.target
+\`\`\`text
+options {
+        directory "/var/named";
+        forwarders { 204.152.184.88; };
+};
 
-[Service]
-User=appuser
-ExecStart=/usr/bin/python3 /opt/myapp/main.py
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
+zone "." {
+        type hint;
+        file "root.hints";
+};
 \`\`\`
 
-## Managing the Service
-Reload the daemon and start the service:
+## Zone Files
+A typical SOA record looks like:
+
+\`\`\`text
+@ IN SOA ns.linux.org. hostmaster.linux.org. (
+        199802151 ; serial
+        8H ; refresh
+        2H ; retry
+        1W ; expire
+        1D ; default_ttl
+)
+\`\`\`
+
+## Testing
+Use \`nslookup\` to test your configuration.
+      `
+    },
+    {
+      id: 'quota-howto',
+      title: 'Quota HOWTO',
+      category: 'System Administration',
+      lastUpdated: '2003-08-14',
+      obsolescenceScore: 89,
+      modernEquivalent: 'XFS Quota / Ext4 Quota',
+      description: 'Enforcing disk usage limits on users.',
+      sourceUrl: 'https://tldp.org/HOWTO/html_single/Quota/',
+      content: `
+# Quota HOWTO
+
+## Enabling Quotas
+Edit \`/etc/fstab\` and add \`usrquota\` and \`grpquota\` to the partitions.
+
+\`\`\`text
+/dev/hda1  /  ext2  defaults,usrquota,grpquota  1 1
+\`\`\`
+
+## Initializing
+Run \`quotacheck\` to create the quota files:
+
 \`\`\`bash
-systemctl daemon-reload
-systemctl start myapp
-systemctl enable myapp
+quotacheck -avug
+\`\`\`
+
+## Editing Limits
+Use \`edquota\` to edit a user's limits:
+\`\`\`bash
+edquota -u username
 \`\`\`
       `
     },
     {
-      id: 'git-intro',
-      title: 'Git Version Control Basics',
+      id: 'virtualization-howto',
+      title: 'Virtualization HOWTO',
       category: 'DevOps',
-      lastUpdated: '2024-02-01',
-      obsolescenceScore: 0,
-      description: 'Essential commands for git repositories.',
+      lastUpdated: '2006-08-23',
+      obsolescenceScore: 92,
+      modernEquivalent: 'Docker / KVM / Podman',
+      description: 'Discusses various virtualization technologies like VServer, Xen, and QEMU.',
+      sourceUrl: 'https://tldp.org/HOWTO/html_single/Virtualization-HOWTO/',
       content: `
-# Git Version Control Basics
+# Virtualization HOWTO
 
-## Initializing
+## QEMU
+QEMU is a fast processor emulator. You can run a disk image like this:
+
 \`\`\`bash
-git init
+qemu -hda linux.img -boot c
 \`\`\`
 
-## Staging and Committing
-\`\`\`bash
-git add .
-git commit -m "Initial commit"
-\`\`\`
+## Linux-VServer
+Linux-VServer allows you to run multiple virtual servers on a single kernel.
 
-## Branching
-Create and switch to a new branch:
+## Chroot
+The simplest form of virtualization is \`chroot\`.
 \`\`\`bash
-git checkout -b feature/login
-\`\`\`
-
-## Merging
-Merge feature branch into main:
-\`\`\`bash
-git checkout main
-git merge feature/login
+chroot /mnt/gentoo /bin/bash
 \`\`\`
       `
     }
